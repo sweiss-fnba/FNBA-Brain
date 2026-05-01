@@ -10,12 +10,18 @@ This repository is a **session memory store**. It captures summaries of Claude C
 FNBAbrain/
 ├── CLAUDE.md              ← this file
 ├── README.md
-├── summarize.py           ← stop hook + manual summarization script
-├── .env                   ← ANTHROPIC_API_KEY for manual script use (gitignored)
+├── summarize.py           ← manual summarization script (requires ANTHROPIC_API_KEY)
+├── .env                   ← ANTHROPIC_API_KEY for summarize.py (gitignored)
 ├── .gitignore
+├── .venv/                 ← Python venv for summarize.py dependencies
 └── conversations/         ← session summaries, one file per save
-    └── YYYY-MM-DD_HHmmss.md
+    └── YYYY-MM-DD_HHmmss.md   ← written by /save
+    └── YYYY-MM-DD_<id8>.md    ← written by summarize.py
 ```
+
+Slash command files live globally at `~/.claude/commands/` (not in this repo):
+- `~/.claude/commands/save.md`
+- `~/.claude/commands/load.md`
 
 ---
 
@@ -51,16 +57,17 @@ Reads all files in `conversations/` in chronological order (oldest first) and lo
 
 ## summarize.py
 
-Dual-mode script used as both a **stop hook** and an optional **manual tool**.
+Optional manual summarization script. Run from the project root to summarize the most recent session without being inside an active conversation.
 
-**Stop hook mode** (automatic): Claude Code pipes a JSON payload to stdin when a session ends. The script summarizes the transcript via the Anthropic API and writes to `conversations/`.
+**Manual mode**: Detects that stdin is a TTY, reads the most recent session JSONL from `~/.claude/projects/-home-sweiss-workspace-FNBAbrain/`, calls the Anthropic API to summarize, and writes to `conversations/` as `YYYY-MM-DD_{session_id[:8]}.md`.
 
-**Manual mode**: Run `python summarize.py` from the project root. Reads the most recent session JSONL from `~/.claude/projects/-home-sweiss-workspace-FNBAbrain/`, then calls the Anthropic API to summarize it. Requires `ANTHROPIC_API_KEY` to be set in `.env`.
+Requires `ANTHROPIC_API_KEY` to be set in `.env` (loaded automatically by the script).
 
-Stop hook is configured in `~/.claude/settings.json`:
-```json
-"Stop": [{ "hooks": [{ "type": "command", "command": "/path/to/.venv/bin/python /path/to/summarize.py" }] }]
+```bash
+python summarize.py
 ```
+
+The script also contains dead stop-hook code (reads a JSON payload from stdin) but the hook is **not currently wired up** — summarization is fully user-controlled.
 
 ---
 
@@ -68,5 +75,5 @@ Stop hook is configured in `~/.claude/settings.json`:
 
 - `conversations/` is the source of truth for session history. Don't edit files there manually.
 - `.env` is gitignored — never commit it.
-- `/save` is the preferred way to capture a session mid-conversation. The stop hook captures it automatically on exit.
+- `/save` is the preferred way to capture a session mid-conversation.
 - `/load` at the start of a new session restores continuity from prior work.

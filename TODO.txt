@@ -1,0 +1,12 @@
+    Now
+-Utilize beginning and end hooks
+-Add a rule which creates a master summary 
+    -The load rule can use this file instead of all of them which is more efficient
+-Do not prompt for edits of files in /conversations (thats what its for)
+-Change such that a master "docs" folder contains all refs
+    -Create meta files in the docs folder for claude to ref
+        
+
+    Maybe later
+-Create a rule which summarizes a repo?
+-Create a more robust structre?
